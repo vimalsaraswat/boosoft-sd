@@ -1,63 +1,54 @@
 <script lang="ts">
+import { Popover } from 'primevue'
 import { defineComponent } from 'vue'
 
 export default defineComponent({
-  props: {
-    width: {
-      type: String,
-      default: 'w-80',
-    },
-  },
-
+  components: { Popover },
   data() {
     return {
+      popoverRef: null as InstanceType<typeof Popover> | null,
       isOpen: false,
     }
   },
-
   mounted() {
-    document.addEventListener('click', this.handleOutsideClick)
+    this.popoverRef = this.$refs.op as InstanceType<typeof Popover>
   },
-
-  beforeUnmount() {
-    document.removeEventListener('click', this.handleOutsideClick)
-  },
-
   methods: {
-    open() {
-      this.isOpen = true
-    },
-    close() {
-      this.isOpen = false
-    },
-    toggle() {
+    toggle(e: MouseEvent) {
+      this.popoverRef?.toggle(e)
       this.isOpen = !this.isOpen
     },
-
-    handleOutsideClick(e: MouseEvent) {
-      const root = this.$refs.root as HTMLElement | undefined
-      if (!root) return
-
-      if (!root.contains(e.target as Node)) {
-        this.isOpen = false
-      }
+    show(e: MouseEvent) {
+      this.popoverRef?.show(e)
+      this.isOpen = true
+    },
+    hide() {
+      this.popoverRef?.hide()
+      this.isOpen = false
+    },
+    handleHide() {
+      this.isOpen = false
     },
   },
 })
 </script>
 
 <template>
-  <div class="relative inline-block" ref="root">
-    <div @click.stop="toggle">
-      <slot name="trigger" :is-open="isOpen" :open="open" :close="close" :toggle="toggle"></slot>
-    </div>
+  <div class="card flex justify-center">
+    <slot name="trigger" :isOpen="isOpen" :open="show" :close="hide" :toggle="toggle"></slot>
 
-    <div v-show="isOpen" :class="[width, 'absolute z-[9999] mt-2 right-0']" @click.stop>
-      <div
-        class="bg-white border border-[#E1EAF3] rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] overflow-hidden"
-      >
-        <slot :close="close"></slot>
-      </div>
-    </div>
+    <Popover
+      :visible="isOpen"
+      :arrow="false"
+      :show-arrow="false"
+      @hide="handleHide"
+      ref="op"
+      class="no-scrollbar"
+      :pt="{
+        root: { style: { '&::before, &::after': { display: 'none !important' } } },
+      }"
+    >
+      <slot :close="hide"></slot>
+    </Popover>
   </div>
 </template>

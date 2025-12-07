@@ -1,4 +1,4 @@
-import type { User } from '@/types/user'
+import type { GetUsersParams, PaginatedResponse, User } from '@/types/user'
 
 const MOCK_OTP = '123456'
 
@@ -105,9 +105,143 @@ const USERS = [
       },
     ],
   },
+  ...Array.from({ length: 95 }).map((_, i) => {
+    const id = i + 6
+
+    const names = [
+      'Ethan',
+      'Sofia',
+      'Noah',
+      'Olivia',
+      'Arjun',
+      'Chloe',
+      'Rahul',
+      'Emma',
+      'Lucas',
+      'Harper',
+      'Ishaan',
+      'Zoe',
+      'Daniel',
+      'Lily',
+      'Mohammed',
+      'Ava',
+      'Benjamin',
+      'Mia',
+      'Henry',
+      'Charlotte',
+      'Leo',
+      'Isabella',
+      'James',
+      'Amelia',
+      'Jack',
+      'Ella',
+      'Samuel',
+      'Ariana',
+      'David',
+      'Victoria',
+      'Jayden',
+      'Nora',
+      'Gabriel',
+      'Hannah',
+      'Elijah',
+      'Abigail',
+      'Wyatt',
+      'Scarlett',
+      'Mateo',
+      'Penelope',
+      'Owen',
+      'Layla',
+      'Julian',
+      'Grace',
+      'Caleb',
+      'Chloe',
+      'Nathan',
+    ]
+
+    const departments = [
+      'Au - Store Ops',
+      'Retail Management',
+      'Product Design',
+      'Customer Service',
+    ]
+
+    const countries = ['Australia (AU)', 'NewZealand (NZ)', 'Canada (CA)', 'Mexico (MX)']
+
+    const roles = ['Admin', 'Editor', 'Viewer']
+
+    const statuses = ['Active', 'Pending', 'Suspended']
+
+    const random = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)]
+
+    const entriesCount = Math.floor(Math.random() * 3) + 1 // 1, 2, or 3
+    const entries = Array.from({ length: entriesCount }).map(() => ({
+      country: random(countries),
+      department: random(departments),
+      role: random(roles),
+      status: random(statuses),
+      createdDate: `${Math.ceil(Math.random() * 28)}th August 2025`,
+      lastLogin: `${Math.ceil(Math.random() * 28)}th August 2025`,
+    }))
+
+    return {
+      id,
+      name: names[i % names.length],
+      email: `user${id}@email.com`,
+      entries,
+    }
+  }),
 ] as User[]
 
-export const mockGetUsers = () =>
-  new Promise<User[]>((resolve) => {
-    setTimeout(() => resolve(USERS.slice()), 400)
+export const mockGetUsers = (params: GetUsersParams): Promise<PaginatedResponse<User>> => {
+  const { page = 1, pageSize = 10, search, country, department, role, status } = params
+
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      let filtered = USERS.slice()
+
+      if (search && search.trim() !== '') {
+        const q = search.trim().toLowerCase()
+        filtered = filtered.filter(
+          (user) =>
+            user.name.toLowerCase().includes(q) ||
+            user.email.toLowerCase().includes(q) ||
+            user.entries.some(
+              (item) =>
+                item.country.toLowerCase().includes(q) ||
+                item.department.toLowerCase().includes(q) ||
+                item.role.toLowerCase().includes(q) ||
+                item.status.toLowerCase().includes(q),
+            ),
+        )
+      }
+
+      if (country) {
+        filtered = filtered.filter((user) => user.entries.some((e) => e.country === country))
+      }
+
+      if (department) {
+        filtered = filtered.filter((user) => user.entries.some((e) => e.department === department))
+      }
+
+      if (role) {
+        filtered = filtered.filter((user) => user.entries.some((e) => e.role === role))
+      }
+
+      if (status) {
+        filtered = filtered.filter((user) => user.entries.some((e) => e.status === status))
+      }
+
+      const total = filtered.length
+      const start = (page - 1) * pageSize
+      const end = start + pageSize
+      const items = filtered.slice(start, end)
+
+      resolve({
+        items,
+        total,
+        page,
+        pageSize,
+      })
+    }, 400)
   })
+}

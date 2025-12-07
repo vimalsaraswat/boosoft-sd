@@ -2,16 +2,27 @@
 import type { User } from '@/types/user'
 import { defineComponent } from 'vue'
 import UserRow from './UserRow.vue'
+import CheckBox from '@/components/common/CheckBox.vue'
 
 export default defineComponent({
   components: {
     UserRow,
+    CheckBox,
   },
 
   props: {
     users: {
       type: Array as () => User[],
       required: true,
+    },
+    selectedIds: { type: Array as () => number[], required: true },
+  },
+
+  emits: ['update:selectedIds'],
+
+  computed: {
+    allSelected(): boolean {
+      return this.users.length > 0 && this.users.every((u) => this.selectedIds.includes(u.id))
     },
   },
 
@@ -26,66 +37,64 @@ export default defineComponent({
       this.expandedRow = this.expandedRow === id ? null : id
     },
 
-    getRoleClasses(role: string) {
-      const map: Record<string, string> = {
-        Editor: 'bg-green-50 text-green-700',
-        Admin: 'bg-blue-50 text-blue-600',
-        Viewer: 'bg-yellow-50 text-yellow-700',
+    toggleSelectAll() {
+      if (this.allSelected) {
+        this.$emit('update:selectedIds', [])
+      } else {
+        this.$emit(
+          'update:selectedIds',
+          this.users.map((u) => u.id),
+        )
       }
-      return map[role] || 'bg-gray-100 text-gray-700'
     },
 
-    getStatusClasses(status: string) {
-      const map: Record<string, string> = {
-        Active: 'text-green-600',
-        Suspended: 'text-red-600',
-        Pending: 'text-yellow-600',
-      }
-      return map[status] || 'text-gray-600'
-    },
+    toggleRowSelection(id: number) {
+      const newList = this.selectedIds.includes(id)
+        ? this.selectedIds.filter((x) => x !== id)
+        : [...this.selectedIds, id]
 
-    hasYellowDot(department: string) {
-      return (
-        department.includes('Au') ||
-        department.includes('Retail') ||
-        department.includes('Product') ||
-        department.includes('Customer')
-      )
-    },
-
-    showSummary(entries: User['entries']) {
-      return entries.length > 1
+      this.$emit('update:selectedIds', newList)
     },
   },
 })
 </script>
 
 <template>
-  <div class="rounded-lg border border-[#E1EAF3] max-w-[calc(100vw-64px)] overflow-x-auto">
-    <table class="w-full text-left text-sm text-gray-600">
-      <thead class="bg-[#ECF1F8] text-[#5F6368] font-medium">
-        <tr>
-          <th class="w-12 px-4 py-3"></th>
-          <th class="px-6 py-4">Name</th>
-          <th class="px-6 py-4">Country</th>
-          <th class="px-6 py-4">Department</th>
-          <th class="px-6 py-4">Roles</th>
-          <th class="px-6 py-4">Status</th>
-          <th class="px-6 py-4">Created Date</th>
-          <th class="px-6 py-4 text-right pr-10">Last Login</th>
-          <th class="w-12"></th>
+  <div class="rounded-lg border p-[2px] border-[#E1EAF3] h-full w-full overflow-x-auto">
+    <table class="w-full text-left text-sm text-[#5F6368]">
+      <thead class="sticky top-0">
+        <tr class="font-medium">
+          <th class="w-12 px-4 pl-8 py-3 rounded-tl-lg">
+            <CheckBox v-model="allSelected" @update:modelValue="toggleSelectAll" />
+          </th>
+          <th class="py-4 pl-6">Name</th>
+          <th class="py-4">Country</th>
+          <th class="py-4">Department</th>
+          <th class="py-4">Roles</th>
+          <th class="py-4">Status</th>
+          <th class="py-4">Created Date</th>
+          <th class="py-4 text-right pr-10">Last Login</th>
+          <th class="rounded-tr-lg"></th>
         </tr>
       </thead>
 
-      <tbody class="bg-white divide-y divide-gray-200">
+      <tbody class="">
         <UserRow
           v-for="u in users"
           :key="u.id"
           :user="u"
           :expanded="expandedRow === u.id"
           @toggle="toggleRow"
+          :checked="selectedIds.includes(u.id)"
+          @toggle:selected="toggleRowSelection"
         />
       </tbody>
     </table>
   </div>
 </template>
+
+<style scoped>
+th {
+  background-color: #ecf1f8;
+}
+</style>

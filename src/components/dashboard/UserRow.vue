@@ -3,18 +3,23 @@ import { defineComponent } from 'vue'
 import type { User, UserEntry } from '@/types/user'
 import { getInitials } from '@/lib/utils'
 import ActionsMenu from './ActionsMenu.vue'
+import UserBadge from '@/components/common/UserBadge.vue'
+import SimpleCheckbox from '@/components/common/CheckBox.vue'
 
 export default defineComponent({
   components: {
     ActionsMenu,
+    UserBadge,
+    SimpleCheckbox,
   },
 
   props: {
     user: { type: Object as () => User, required: true },
     expanded: { type: Boolean, default: false },
+    checked: { type: Boolean, default: false },
   },
 
-  emits: ['toggle'],
+  emits: ['toggle', 'toggle:selected'],
 
   computed: {
     initials(): string {
@@ -33,6 +38,10 @@ export default defineComponent({
   methods: {
     toggle() {
       this.$emit('toggle', this.user.id)
+    },
+
+    toggleSelected() {
+      this.$emit('toggle:selected', this.user.id)
     },
 
     statusClass(status: UserEntry['status']) {
@@ -61,25 +70,38 @@ export default defineComponent({
 </script>
 
 <template>
-  <tr
-    class="hover:bg-gray-50 transition-colors cursor-pointer"
-    :class="{ 'bg-gray-50': expanded }"
-    @click="toggle"
-  >
-    <td class="px-8 pr-3 py-4">
+  <tr class="hover:bg-[#F8F9FA] p-1">
+    <td
+      @click="
+        () => {
+          if (hasMultiple) toggle()
+        }
+      "
+      class="px-8 pr-3 py-4 no-right-border"
+    >
       <div class="flex items-center justify-between gap-3">
-        <input type="checkbox" class="w-4 h-4 rounded border-gray-300" />
+        <div>
+          <SimpleCheckbox :model-value="checked" @update:model-value="toggleSelected" />
+        </div>
         <img
+          v-if="hasMultiple"
           src="@/assets/icons/chevron-down.svg"
           width="14"
           height="14"
-          class="transition-transform duration-200"
+          class="transition-transform duration-200 cursor-pointer"
           :class="[expanded ? 'rotate-180' : '']"
         />
       </div>
     </td>
 
-    <td class="px-6 py-4">
+    <td
+      @click="
+        () => {
+          if (hasMultiple) toggle()
+        }
+      "
+      class="px-6 py-4"
+    >
       <div class="flex items-center gap-3">
         <div class="rounded-full flex items-center justify-center size-10 font-medium bg-[#ECF1F8]">
           {{ initials }}
@@ -98,7 +120,7 @@ export default defineComponent({
 
     <td class="px-6 py-4">
       <div class="flex items-center gap-2">
-        <div v-if="!hasMultiple" class="w-3 h-3 rounded-full border-2 border-yellow-500"></div>
+        <UserBadge v-if="!hasMultiple" />
         <span class="text-[#5F6368]">
           {{ hasMultiple ? `+${user.entries.length}` : firstEntry.department }}
         </span>
@@ -116,7 +138,7 @@ export default defineComponent({
       </span>
     </td>
 
-    <td class="px-6 py-4 text-center font-medium">
+    <td class="px-6 py-4 font-medium">
       <span v-if="!hasMultiple" :class="statusClass(firstEntry.status)">
         {{ firstEntry.status }}
       </span>
@@ -137,8 +159,8 @@ export default defineComponent({
       <span v-else>-</span>
     </td>
 
-    <td class="px-4 py-4">
-      <ActionsMenu :variant="firstEntry?.status" />
+    <td class="px-4 py-4 no-right-border">
+      <ActionsMenu v-if="!hasMultiple" :variant="firstEntry?.status" />
     </td>
   </tr>
 
@@ -146,16 +168,16 @@ export default defineComponent({
     <tr
       v-for="(entry, idx) in user.entries"
       :key="user.id + '-expanded-' + idx"
-      class="border-b border-gray-200 last:border-b-0 hover:bg-gray-100 transition-colors"
+      class="hover:bg-[#4285F408] p-1"
     >
-      <td class="w-12 px-4 py-4"></td>
-      <td class="px-6 py-4"></td>
+      <td class="no-right-border"></td>
+      <td></td>
 
       <td class="px-6 py-4 font-medium">{{ entry.country }}</td>
 
       <td class="px-6 py-4">
         <div class="flex items-center gap-2">
-          <div class="w-3 h-3 rounded-full border-2 border-yellow-500"></div>
+          <UserBadge />
           <span>{{ entry.department }}</span>
         </div>
       </td>
@@ -170,13 +192,25 @@ export default defineComponent({
         >
       </td>
 
-      <td class="px-6 py-4 text-center font-medium" :class="statusClass(entry.status)">
+      <td class="px-6 py-4 font-medium" :class="statusClass(entry.status)">
         {{ entry.status }}
       </td>
 
       <td class="px-6 py-4">{{ entry.createdDate }}</td>
       <td class="px-6 py-4 pr-10">{{ entry.lastLogin }}</td>
-      <td></td>
+      <td class="no-right-border">
+        <ActionsMenu :variant="firstEntry?.status" />
+      </td>
     </tr>
   </template>
 </template>
+
+<style scoped>
+td {
+  border-right: 1px solid #e1eaf3;
+  border-bottom: 1px solid #e1eaf3;
+}
+.no-right-border {
+  border-right: none;
+}
+</style>

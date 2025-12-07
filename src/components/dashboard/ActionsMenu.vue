@@ -34,6 +34,7 @@ export default defineComponent({
 
   methods: {
     select(id: string) {
+      console.log('items', this.items)
       this.$emit('select', id)
     },
   },
@@ -41,10 +42,11 @@ export default defineComponent({
 </script>
 
 <template>
-  <PopoverWrapper width="w-80">
-    <template #trigger>
+  <PopoverWrapper>
+    <template #trigger="{ toggle }">
       <button
-        class="flex items-center cursor-pointer justify-center size-10 rounded-full bg-[#ECF1F8] text-[#5F6368] font-medium text-sm hover:ring-4 hover:ring-blue-100 focus:outline-none"
+        @click="toggle"
+        class="flex items-center cursor-pointer justify-center size-7 rounded-full bg-[#ECF1F8] text-[#5F6368] font-medium text-sm hover:bg-[#e1eaf3]"
       >
         <img
           src="@/assets/icons/dots-horizontal.svg"
@@ -54,26 +56,24 @@ export default defineComponent({
       </button>
     </template>
 
-    <template>
-      <div class="w-full">
-        <div class="bg-white border border-[#E1EAF3] rounded-xl overflow-hidden shadow-sm">
-          <div class="divide-y divide-gray-100">
-            <template v-for="(it, idx) in items" :key="idx">
-              <div v-if="idx === items?.length - 1" class="border-t my-2 border-gray-200"></div>
+    <template #default>
+      <div
+        class="w-56 bg-white border-[1.5px] space-y-1 border-[#E1EAF3] rounded-lg p-1 shadow-[0_4px_20px_rgba(0,0,0,0.05)] overflow-hidden"
+      >
+        <template v-for="(it, idx) in items" :key="idx">
+          <div v-if="idx === items?.length - 1" class="border-t border-[#E1EAF3]"></div>
 
-              <button
-                @click="select(it.id)"
-                class="w-full text-left flex items-center gap-3 px-4 py-3 hover:bg-gray-50 focus:outline-none focus:bg-gray-50"
-                :aria-label="it.label"
-                type="button"
-              >
-                <span :class="it.destructive ? 'text-red-600 font-medium' : 'text-gray-700'">
-                  {{ it.label }}
-                </span>
-              </button>
-            </template>
-          </div>
-        </div>
+          <button
+            @click="select(it.id)"
+            class="w-full text-[#5F6368] flex items-center gap-3 p-3 hover:bg-gray-50 focus:bg-gray-50"
+            type="button"
+          >
+            <img v-if="it.icon" :src="it.icon" class="size-4" />
+            <span :style="{ color: it.accent }">
+              {{ it.label }}
+            </span>
+          </button>
+        </template>
       </div>
     </template>
   </PopoverWrapper>

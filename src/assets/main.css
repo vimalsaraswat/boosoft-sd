@@ -5,9 +5,31 @@
   --font-lato: Lato, ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Global default */
 @layer base {
   html {
     font-family: var(--font-sans);
-  } /* Or --font-lato */
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+.p-popover::before,
+.p-popover::after {
+  display: none !important;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
 }
